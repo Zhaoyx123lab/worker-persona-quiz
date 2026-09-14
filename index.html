@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>打工人成分检测</title>
+  <meta name="description" content="不是测你是谁，是测你怎么熬过这一天。30 题测出你的上班人格。" />
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --surface: #fafafa;
+      --ink: #18181b;
+      --muted: #71717a;
+      --line: #e4e4e7;
+      --accent: #c2410c;
+      --accent-soft: #ffedd5;
+      --accent-ink: #9a3412;
+      --radius: 14px;
+      --shadow: 0 1px 0 rgba(24, 24, 27, 0.04), 0 8px 24px rgba(24, 24, 27, 0.06);
+      --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(720px, calc(100% - 2rem));
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* —— Header —— */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 0 0.75rem;
+      gap: 1rem;
+    }
+    .brand {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 1.05rem;
+    }
+    .brand span { color: var(--accent); }
+    .top-meta {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* —— Progress —— */
+    .progress-wrap {
+      display: none;
+      margin-bottom: 2rem;
+    }
+    .progress-wrap.on { display: block; }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+    .progress-meta strong {
+      color: var(--ink);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-track {
+      height: 3px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* —— Screens —— */
+    .screen { display: none; flex: 1; flex-direction: column; padding-bottom: 3rem; }
+    .screen.on { display: flex; }
+
+    .fade-in {
+      animation: fade 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { animation: none; }
+      .progress-fill { transition: none; }
+      .opt { transition: none !important; }
+    }
+
+    /* —— Intro —— */
+    .intro-kicker {
+      margin-top: 12vh;
+      font-size: 0.8125rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .intro h1 {
+      margin: 0.75rem 0 1rem;
+      font-size: clamp(2rem, 6vw, 3.25rem);
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      font-weight: 800;
+      max-width: 14em;
+    }
+    .intro h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .intro-lead {
+      margin: 0 0 2rem;
+      color: var(--muted);
+      font-size: 1.0625rem;
+      max-width: 32em;
+    }
+    .intro-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      background: var(--ink);
+      color: #fafafa;
+      border-radius: 999px;
+      padding: 0.85rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .btn-primary:hover { background: #27272a; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-ghost {
+      padding: 0.85rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-radius: 999px;
+    }
+    .btn-ghost:hover { color: var(--ink); }
+
+    .intro-facts {
+      margin-top: 3.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .fact {
+      background: var(--surface);
+      padding: 1rem 1.1rem;
+    }
+    .fact b {
+      display: block;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .fact span {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    @media (max-width: 540px) {
+      .intro-facts { grid-template-columns: 1fr; }
+      .intro-kicker { margin-top: 6vh; }
+    }
+
+    /* —— Question —— */
+    .q-title {
+      margin: 0.25rem 0 1.75rem;
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+    .opts {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .opt {
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.05rem 1.15rem;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.85rem;
+      align-items: start;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+    .opt:hover {
+      border-color: #a1a1aa;
+      transform: translateY(-1px);
+    }
+    .opt:active { transform: scale(0.995); }
+    .opt.picked {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .opt-key {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .opt.picked .opt-key {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .opt-text {
+      font-size: 0.98rem;
+      padding-top: 0.15rem;
+    }
+    .q-nav {
+      margin-top: 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .q-hint { font-size: 0.8125rem; color: var(--muted); }
+
+    /* —— Result —— */
+    .result-code {
+      font-family: var(--mono);
+      font-size: clamp(2.75rem, 10vw, 4.25rem);
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      text-align: center;
+    }
+    .result-name { text-align: center; }
+    .result-title { text-align: center; }
+    .result-quote { text-align: left; }
+    .char-stage {
+      margin: 5vh 0 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .char-frame {
+      width: min(260px, 72vw);
+      aspect-ratio: 3 / 4;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fafafa 0%, #f4f4f5 100%);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .char-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+    .result-name {
+      margin: 0.35rem 0 0.25rem;
+      font-size: clamp(1.75rem, 4vw, 2.35rem);
+      letter-spacing: -0.03em;
+      font-weight: 800;
+    }
+    .result-title {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .result-quote {
+      margin: 1.5rem 0 2rem;
+      padding: 1rem 1.15rem;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 1.05rem;
+      color: var(--accent-ink);
+    }
+    .result-body {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .result-body h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+    .result-body p {
+      margin: 0 0 1.25rem;
+      font-size: 0.98rem;
+    }
+    .result-body p:last-child { margin-bottom: 0; }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0 0 1.25rem;
+    }
+    .tag {
+      font-size: 0.8125rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-weight: 600;
+    }
+    .scores {
+      margin-top: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.15rem 1.25rem;
+    }
+    .scores h3 { margin: 0 0 0.85rem; }
+    .score-row {
+      display: grid;
+      grid-template-columns: 5.5rem 1fr 2rem;
+      gap: 0.65rem;
+      align-items: center;
+      margin-bottom: 0.45rem;
+      font-size: 0.8125rem;
+    }
+    .score-row:last-child { margin-bottom: 0; }
+    .score-row .lab { color: var(--muted); }
+    .score-row .lab b { color: var(--ink); font-weight: 600; margin-right: 0.25rem; }
+    .bar {
+      height: 6px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      background: #a1a1aa;
+      border-radius: 999px;
+    }
+    .score-row.top .bar i { background: var(--accent); }
+    .score-row .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+    }
+    .result-actions {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .share-note {
+      margin-top: 1rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    footer.page-foot {
+      margin-top: auto;
+      padding: 1.5rem 0 2rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">打工人<span>成分检测</span></div>
+      <div class="top-meta" id="topMeta">打工人成分检测</div>
+    </header>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-meta">
+        <span>进度</span>
+        <strong id="progressLabel">1 / 30</strong>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <!-- Intro -->
+    <section class="screen on" id="screenIntro">
+      <div class="intro fade-in">
+        <p class="intro-kicker">Workplace Type Indicator</p>
+        <h1>不是测你是谁，<br />是测你怎么<em>熬过这一天</em>。</h1>
+        <p class="intro-lead">30 道情景题，12 种上班成分。凭直觉选，别想太久——想太久的都是在演。</p>
+        <div class="intro-actions">
+          <button class="btn-primary" id="btnStart" type="button">开始测试</button>
+        </div>
+        <div class="intro-facts">
+          <div class="fact"><b>30</b><span>道情景题</span></div>
+          <div class="fact"><b>12</b><span>种上班人格</span></div>
+          <div class="fact"><b>≈3</b><span>分钟完成</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section class="screen" id="screenQuiz">
+      <div class="fade-in" id="quizInner">
+        <p class="q-title" id="qTitle">—</p>
+        <div class="opts" id="qOpts"></div>
+        <div class="q-nav">
+          <button class="btn-ghost" id="btnPrev" type="button">上一题</button>
+          <span class="q-hint">点选后自动进入下一题</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section class="screen" id="screenResult">
+      <div class="fade-in">
+        <div class="char-stage">
+          <div class="char-frame" id="rChar" aria-hidden="true"></div>
+          <div class="char-badge" id="rCode">MG</div>
+        </div>
+        <h2 class="result-name" id="rName">摸鱼王</h2>
+        <p class="result-title" id="rTitle">带薪养生艺术家</p>
+        <blockquote class="result-quote" id="rQuote">「活是干不完的，但鱼是可以摸的。」</blockquote>
+        <div class="result-body">
+          <h3>画像</h3>
+          <p id="rProfile"></p>
+          <h3>标签</h3>
+          <div class="tag-row" id="rTags"></div>
+          <h3>职场必杀</h3>
+          <p id="rSkill"></p>
+          <h3>危险信号</h3>
+          <p id="rRisk"></p>
+          <h3>一句话总结</h3>
+          <p id="rSummary"></p>
+        </div>
+        <div class="result-actions">
+          <button class="btn-primary" id="btnShare" type="button">分享结果</button>
+          <button class="btn-ghost" id="btnAgain" type="button">再测一次</button>
+        </div>
+        <p class="share-note">凭直觉作答。并列时按规则决出唯一人格。</p>
+      </div>
+    </section>
+
+    <footer class="page-foot">打工人成分检测 · 娱乐向测试，不构成任何职业或心理诊断。</footer>
+  </div>
+
+  <script>
+    const TYPES = {
+      MG: {
+        name: "摸鱼王",
+        title: "带薪养生艺术家",
+        quote: "「活是干不完的，但鱼是可以摸的。」",
+        profile: "你不是懒，你只是把「可持续上班」研究成了显学。公司不会因为你多熬两小时而上市，但你会因为多摸两小时鱼而多活两年。你摸鱼时会伪装忙碌；躺平者连装都懒得装。",
+        tags: ["伪装在岗", "Alt+Tab", "日报美化"],
+        skill: "一键切换「看起来很忙」脸；Alt+Tab 手速已达电竞水平。",
+        risk: "当所有人都开始摸鱼，你是第一个被发现的——因为你摸得最有仪式感。",
+        summary: "上班是场马拉松，你选择边走边吃瓜。"
+      },
+      TP: {
+        name: "躺平者",
+        title: "内卷退出认证官",
+        quote: "「卷是别人的事，我只想准点活着。」",
+        profile: "你不是不努力，你是拒绝把命交给别人的赛道。晋升可以，加班可以，但要按你的节奏；不合理的冲刺，你会平静地说不。摸鱼人偷偷划水还要演；你公开下线，问心无愧。",
+        tags: ["边界感", "到点就走", "免疫画饼"],
+        skill: "边界感拉满；到点走人从不解释；对画饼免疫。",
+        risk: "有时「躺」会变成「放」，把该扛的也放掉了。",
+        summary: "卷是别人的事，我只想准点活着。"
+      },
+      HM: {
+        name: "毁灭者",
+        title: "地球停转推广大使",
+        quote: "「只要地球炸了，就不用写周报。」",
+        profile: "你对上班的恨，已经超越了个人情绪，上升到了存在主义高度。你不是不想干活，你是不理解「为什么人类进化出了打卡」。",
+        tags: ["厌班体质", "存在主义", "冷静诛心"],
+        skill: "在群里用最平静的语气说出最诛心的话。",
+        risk: "别人内耗，你外耗——耗的是整个组织的乐观情绪。",
+        summary: "你的职业规划只有一行字：等一个不用上班的未来。"
+      },
+      GD: {
+        name: "干饭王",
+        title: "工位上的生存主义美食家",
+        quote: "「上午的会，是为了中午的饭。」",
+        profile: "会议可以延期，需求可以砍掉，但 12:00 的饭点神圣不可侵犯。你用胃思考，用筷子决策。",
+        tags: ["饭点神圣", "零食雷达", "团建回本"],
+        skill: "永远知道哪家新开、谁的零食最多、如何在团建里吃到回本。",
+        risk: "一旦食堂换供应商，你的绩效会跟着波动。",
+        summary: "KPI 会辜负你，但碳水不会。"
+      },
+      XH: {
+        name: "小孩",
+        title: "成年外壳 · 学生内核",
+        quote: "「被夸就发光，被凶就宕机。」",
+        profile: "简历上写着「资深」，心里住着一个要糖吃的小孩。被夸会开心一整天，被凶会当场宕机；对复杂的人情世故只想装傻。",
+        tags: ["真诚", "低快乐阈值", "工位小房间"],
+        skill: "用真诚杀出一条血路；工位是自己的小房间；快乐阈值很低。",
+        risk: "你期待职场像学校一样讲道理——它有时不讲。",
+        summary: "看似大人，内心还是那个课间去接热水的小孩。"
+      },
+      DL: {
+        name: "顶梁柱",
+        title: "公司承重墙",
+        quote: "「我一请假，全组宕机。」",
+        profile: "事情到你手里会变清楚，锅到你这里会被接住。你不是不累，你是习惯了「我不扛谁扛」。",
+        tags: ["扛事", "对齐资源", "事故止血"],
+        skill: "跨部门对齐、事故止血、把模糊需求翻译成可执行方案。",
+        risk: "你越靠谱，离谱的事越爱找你。",
+        summary: "你可以请假，但系统会想你。"
+      },
+      JU: {
+        name: "卷王",
+        title: "自燃型永动机",
+        quote: "「别人下班，我热身。」",
+        profile: "你不需要别人推，你自己会滚起来。别人的下班是终点，你的下班是热身结束。",
+        tags: ["自燃", "主动认领", "周报战报"],
+        skill: "主动认领没人要的硬骨头；把周报写成战斗檄文。",
+        risk: "你会无意中抬高全组的生存难度。",
+        summary: "地球不爆炸，你不停下。"
+      },
+      RH: {
+        name: "润学家",
+        title: "隐形辞职倒计时人",
+        quote: "「再忍忍，拿到年终就跑。」",
+        profile: "你人还在工位，心已经在更新简历。每一次失望都会换算成「再待 N 个月」。",
+        tags: ["简历常更", "赔偿计算", "跳板心态"],
+        skill: "面试话术比工作汇报还熟；赔偿金算得门清。",
+        risk: "你可能会因为「再等等年终」而多待三年。",
+        summary: "离职信在草稿箱，随时可以发出。"
+      },
+      XJ: {
+        name: "氛围组组长",
+        title: "可见度管理大师",
+        quote: "「没有人看的忙，不算忙。」",
+        profile: "工作不仅是完成，更是呈现。没有人看见的忙碌等于没忙，没有灯光的加班等于白加。",
+        tags: ["灯光管理", "汇报结构", "高光模式"],
+        skill: "汇报有结构、群聊有节奏、加班有构图。",
+        risk: "当灯光成本高于产出成本，你开始骗自己。",
+        summary: "你负责把真实产出，打在所有人看得见的地方。"
+      },
+      HN: {
+        name: "扫地僧",
+        title: "工位上的隐藏实力派",
+        quote: "「没事，我来吧。」",
+        profile: "你不太会邀功，不太会拒绝，不太会抢镜。事情总在你这里闭环，荣誉总在别人那里签收。",
+        tags: ["深藏功与名", "无声兜底", "稳定交付"],
+        skill: "稳定交付、无声兜底、在所有人摆烂时把系统扫干净。",
+        risk: "隐藏得太好，大家会以为你只是「刚好在」。",
+        summary: "世界是个巨大的草台班子，而你是扫地的那位高手。"
+      },
+      DZ: {
+        name: "点子王",
+        title: "灵感永动机（落地另算）",
+        quote: "「我有一个绝妙的想法。」",
+        profile: "你的脑子是开的，会议室因你而沸腾，文档因你而变厚——然后大家问：所以第一版谁来做？你已经想到第十个玩法了。",
+        tags: ["脑暴核弹", "Plan B/C/D", "可以更酷"],
+        skill: "头脑风暴核弹；把无聊需求翻译成「可以更酷」；永远有 Plan B/C/D。",
+        risk: "点子太多会稀释执行；别人会默认「他只是说说」。",
+        summary: "我有一个绝妙的想法——落地可以再说。"
+      },
+      YX: {
+        name: "隐形人",
+        title: "办公室低电量模式",
+        quote: "「没事别 @ 我。」",
+        profile: "你不是不合群，你是社交带宽天生比较窄。开会希望不被点名，团建希望有事，群聊希望免打扰。你能把活干好，只希望干完之后世界忘了你。",
+        tags: ["异步沟通", "免打扰", "深度独立"],
+        skill: "异步沟通之神；文档写得比会议发言清楚；「没事别找我」体质。",
+        risk: "该刷存在感的场合你消失，功劳簿上就少你一行。",
+        summary: "活我干完，然后请让我消失。"
+      }
+    };
+
+    const TYPE_ORDER = ["MG","TP","HM","GD","XH","DL","JU","RH","XJ","HN","DZ","YX"];
+    const EMOTION_Q = new Set([10, 13, 18, 21, 28]);
+
+    const QUESTIONS = [
+      { t: "周一早晨闹钟响了", o: [
+        ["A","再赖五分钟","XH"],
+        ["B","这破班非上不可吗","HM"],
+        ["C","边刷牙边想：食堂今天有没有红烧肉","GD"],
+        ["D","算了，请个假吧","TP"]
+      ]},
+      { t: "突然被拉进紧急会议", o: [
+        ["A","开摄像头前先调整「忙碌但从容」的表情","XJ"],
+        ["B","心里咯噔：啥事啊？又来活了？","HN"],
+        ["C","边听边在本子列会后 action item","JU"],
+        ["D","立刻搭框架，会后十分钟交初稿","DL"]
+      ]},
+      { t: "周五下午 16:00", o: [
+        ["A","已经在计划今晚吃什么了","GD"],
+        ["B","假装在写方案，其实在清空浏览记录","MG"],
+        ["C","主动问还有什么能推进，顺手把下周的也认领了","JU"],
+        ["D","在招聘软件上更新了「随时到岗」","RH"]
+      ]},
+      { t: "同事说「帮我个忙，很快的」", o: [
+        ["A","行，放我这边吧","HN"],
+        ["B","好的呢～（内心：帮NM,自己干去）","HM"],
+        ["C","可以，顺手再附三个改进建议","DZ"],
+        ["D","可以帮，但活需慢慢干，心急则味散","TP"]
+      ]},
+      { t: "公司宣布「冲刺一个月」", o: [
+        ["A","冲刺可以，补贴和调休先谈好","DL"],
+        ["B","烦死，又要加班了","HM"],
+        ["C","冲刺方案我有个更省力的版本","DZ"],
+        ["D","刷新简历，观望有没有更合适的机会","RH"]
+      ]},
+      { t: "你成功摸鱼了一整个下午", o: [
+        ["A","舒服，这才是上班的意义","MG"],
+        ["B","一边愧疚一边继续摸，日报写「持续推进」","XJ"],
+        ["C","这不叫摸，我有自己的节奏","TP"],
+        ["D","不可能，我的下午永远在推进","JU"]
+      ]},
+      { t: "工资到账短信", o: [
+        ["A","先转一部分进「跑路基金」","RH"],
+        ["B","先约一顿好的","GD"],
+        ["C","看一眼数字，然后继续改 PPT","HN"],
+        ["D","先清空购物车","XH"]
+      ]},
+      { t: "老板路过你的工位", o: [
+        ["A","立刻 Alt+Tab，眉头微皱，手指翻飞","XJ"],
+        ["B","假装没看见，把屏幕调暗一点","MG"],
+        ["C","顺势汇报进展，并认领下一步","JU"],
+        ["D","低头，呼吸放轻，祈祷他别停","YX"]
+      ]},
+      { t: "团建通知发下来", o: [
+        ["A","又要占用周末？NO！","HM"],
+        ["B","吃什么？好吃吗？","GD"],
+        ["C","可以去，但我要在合照 C 位","XJ"],
+        ["D","能不能线上参加？","YX"]
+      ]},
+      { t: "项目出了事故", o: [
+        ["A","第一时间拉群对齐，先扛住再说","HN"],
+        ["B","先把影响面讲清楚：阶段性波动，风险可控","XJ"],
+        ["C","一边灭火一边更新简历","RH"],
+        ["D","冷静拆解问题，排出修复优先级","DL"]
+      ]},
+      { t: "你在茶水间", o: [
+        ["A","正在研究咖啡机的第 7 种玩法","XH"],
+        ["B","怎么还不下班？","HM"],
+        ["C","接了杯水就走，工位还有事","HN"],
+        ["D","你说香蕉蘸辣椒面是什么味道","DZ"]
+      ]},
+      { t: "深夜 22:00 的工作消息", o: [
+        ["A","已读，明天再说，今晚是我的","TP"],
+        ["B","秒回，并附上完整方案","JU"],
+        ["C","不可能看到，下班自动免打扰","RH"],
+        ["D","回了个「收到」，然后继续看番","XH"]
+      ]},
+      { t: "同事在会上抢了你的功劳", o: [
+        ["A","当场用数据把来龙去脉讲一遍，不带情绪","DL"],
+        ["B","当场记下，下次用更硬的产出说话","JU"],
+        ["C","群里补一句「补充一下我当时的设计思路…」","XJ"],
+        ["D","无所谓，反正我也不想干了","HM"]
+      ]},
+      { t: "你理想中的工位", o: [
+        ["A","椅子要能躺，抽屉塞满零食","GD"],
+        ["B","自己设计的小东西和工具","DZ"],
+        ["C","最好有隔断，摄像头拍不到","YX"],
+        ["D","手办、靠垫、解压小玩具一个都不能少","XH"]
+      ]},
+      { t: "被安排完全不合理的活", o: [
+        ["A","行，先放我这","HN"],
+        ["B","接了，招聘软件也打开了","RH"],
+        ["C","先问：资源呢？排期呢？人呢？","DL"],
+        ["D","明确说不：这不在我的节奏里","TP"]
+      ]},
+      { t: "公司发下午茶", o: [
+        ["A","这个瓶子不要扔，绑一起做皮划艇","DZ"],
+        ["B","下午茶打卡，记录一下快乐","XJ"],
+        ["C","有就吃，没有就算——反正也不打算久待","RH"],
+        ["D","你吃的什么？看起来更好吃一点？","XH"]
+      ]},
+      { t: "你的周报一般怎么写", o: [
+        ["A","把「刷新闻」写成「行业动态跟踪」","MG"],
+        ["B","列满 bullet，量化到小数点","JU"],
+        ["C","三行：做了什么、卡点、下周计划","DL"],
+        ["D","半页进展，半页「我还有个更大胆的想法」","DZ"]
+      ]},
+      { t: "听说隔壁组裁员了", o: [
+        ["A","赶紧更新简历，骑驴找马","RH"],
+        ["B","我？裁谁也裁不到我","DL"],
+        ["C","一边害怕一边想：裁了也行，拿赔偿去旅行","HM"],
+        ["D","别注意到我，别注意到我","YX"]
+      ]},
+      { t: "开会超过一小时", o: [
+        ["A","开始在本子上画小人","XH"],
+        ["B","肚子准时开始叫","GD"],
+        ["C","全程没敢发言，散会才敢呼吸","YX"],
+        ["D","虽然长，但确实给了我启发","DZ"]
+      ]},
+      { t: "你如何看待「加班」", o: [
+        ["A","加班可以，得算钱","DL"],
+        ["B","加班是老板的幻觉，我的灵魂已下班","MG"],
+        ["C","加班要发圈，不然加给谁看","XJ"],
+        ["D","不加。到点走人是底线，不是态度","TP"]
+      ]},
+      { t: "体检报告出来有点小问题", o: [
+        ["A","边挂号边想：要不要趁机休个病假","MG"],
+        ["B","问题不大，改完这个版本就去","HN"],
+        ["C","这破班把我身体都上坏了，毁灭吧，世界！","HM"],
+        ["D","看着报告有点委屈，想被安慰一下","XH"]
+      ]},
+      { t: "新人来请教问题", o: [
+        ["A","知无不言，还附赠避坑指南","HN"],
+        ["B","耐心讲清楚架构，顺手帮他把第一版写了","DL"],
+        ["C","教可以，但别 spotlight 我，文档丢过去就行","YX"],
+        ["D","顺手给他安利三个「以后可以做做看」的方向","DZ"]
+      ]},
+      { t: "公司食堂排队很长", o: [
+        ["A","排，我倒要看看他有多好吃","GD"],
+        ["B","不排了，便利店饭团解决，多摸十分钟鱼","MG"],
+        ["C","点外卖送到楼下，不想排队也不想社交","YX"],
+        ["D","算了，回去啃面包，不值得为饭卷","TP"]
+      ]},
+      { t: "年会要出节目", o: [
+        ["A","我报名主唱，C 位出道","XJ"],
+        ["B","我报名后勤，低调干活","HN"],
+        ["C","别叫我，我鼓掌就好","YX"],
+        ["D","我有个超绝创意——然后拉了个群，再没下文","DZ"]
+      ]},
+      { t: "你的请假理由通常是", o: [
+        ["A","真实原因：不想去","HM"],
+        ["B","「家里有点事」（其实在补觉）","MG"],
+        ["C","昨晚吃小龙虾，吃坏肚子了","GD"],
+        ["D","想歇就歇，不包装，不愧疚","TP"]
+      ]},
+      { t: "项目成功上线", o: [
+        ["A","深藏功与名，继续接下一个","HN"],
+        ["B","复盘文档写得比功能还漂亮","JU"],
+        ["C","群里发长文感谢链，点名到每一个人","XJ"],
+        ["D","多亏有我，我真厉害","DZ"]
+      ]},
+      { t: "你手机里最多的 App 是", o: [
+        ["A","外卖/美食","GD"],
+        ["B","招聘/求职","RH"],
+        ["C","短视频/小说（上班专用小窗）","MG"],
+        ["D","游戏/手办资讯/二次元","XH"]
+      ]},
+      { t: "同事说「你看起来好闲」", o: [
+        ["A","「闲是表象，养生是本质。」","MG"],
+        ["B","「我闲？你看看我的 commit。」","JU"],
+        ["C","「还好啦，就正常上班。」（内心：别看我）","YX"],
+        ["D","「我本来就打算不忙。」","TP"]
+      ]},
+      { t: "你希望三年后的自己", o: [
+        ["A","财务自由，再也不上班","HM"],
+        ["B","在另一家更好的公司/更好的赛道","RH"],
+        ["C","成为团队里不可替代的那个人","DL"],
+        ["D","还能对工作里的小事感到开心","XH"]
+      ]},
+      { t: "如果只能给同事留一句话", o: [
+        ["A","「到点就走，命是自己的。」","TP"],
+        ["B","「这需求我来盯，你们先撤。」","JU"],
+        ["C","「中午吃什么？」","GD"],
+        ["D","「没事别 @ 我，谢谢。」","YX"]
+      ]}
+    ];
+
+    const state = {
+      idx: 0,
+      answers: new Array(QUESTIONS.length).fill(null),
+      firstHit: {} // type -> first question index where scored
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const screens = {
+      intro: $("screenIntro"),
+      quiz: $("screenQuiz"),
+      result: $("screenResult")
+    };
+
+    function show(name) {
+      Object.entries(screens).forEach(([k, el]) => {
+        el.classList.toggle("on", k === name);
+      });
+      $("progressWrap").classList.toggle("on", name === "quiz");
+      $("topMeta").textContent =
+        name === "quiz" ? "凭直觉选" : name === "result" ? "测试结果" : "打工人成分检测";
+      window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+    }
+
+    function setProgress(i) {
+      const n = QUESTIONS.length;
+      const cur = Math.min(i + 1, n);
+      $("progressLabel").textContent = `${cur} / ${n}`;
+      $("progressFill").style.width = `${(cur / n) * 100}%`;
+    }
+
+    function renderQuestion() {
+      const q = QUESTIONS[state.idx];
+      setProgress(state.idx);
+      $("qTitle").textContent = `第 ${String(state.idx + 1).padStart(2, "0")} 题 · ${q.t}`;
+      const box = $("qOpts");
+      box.innerHTML = "";
+      q.o.forEach(([key, text, type]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "opt" + (state.answers[state.idx] === type ? " picked" : "");
+        btn.innerHTML = `<span class="opt-key">${key}</span><span class="opt-text"></span>`;
+        btn.querySelector(".opt-text").textContent = text;
+        btn.addEventListener("click", () => pick(type, btn));
+        box.appendChild(btn);
+      });
+      $("btnPrev").style.visibility = state.idx === 0 ? "hidden" : "visible";
+      const inner = $("quizInner");
+      inner.classList.remove("fade-in");
+      void inner.offsetWidth;
+      inner.classList.add("fade-in");
+    }
+
+    function pick(type, btn) {
+      state.answers[state.idx] = type;
+      document.querySelectorAll(".opt").forEach((el) => el.classList.remove("picked"));
+      btn.classList.add("picked");
+      window.setTimeout(() => {
+        if (state.idx < QUESTIONS.length - 1) {
+          state.idx += 1;
+          renderQuestion();
+        } else {
+          showResult();
+        }
+      }, 180);
+    }
+
+
+
+
+    // 16personalities-style low-poly characters (strict geometric faceting)
+    function avatarSVG(code) {
+      const C = {
+        // 紫 · 解构组
+        HM: { g:"p", a:"#7e57c2", b:"#9575cd", c:"#5e35b1", d:"#ede7f6", skin:"#f3d7e0", hair:"#4a148c", mood:"frown" },
+        RH: { g:"p", a:"#6a5acd", b:"#9fa8da", c:"#3f51b5", d:"#e8eaf6", skin:"#f0d8e8", hair:"#283593", mood:"side" },
+        TP: { g:"p", a:"#8e6bc8", b:"#b39ddb", c:"#5e35b1", d:"#f3e5f5", skin:"#f2dce8", hair:"#6a1b9a", mood:"dead" },
+        // 绿 · 心动组
+        XH: { g:"g", a:"#26a69a", b:"#4db6ac", c:"#00695c", d:"#e0f2f1", skin:"#f8e0d0", hair:"#004d40", mood:"kid" },
+        GD: { g:"g", a:"#66bb6a", b:"#81c784", c:"#2e7d32", d:"#e8f5e9", skin:"#f8e2c8", hair:"#1b5e20", mood:"yum" },
+        XJ: { g:"g", a:"#26c6da", b:"#4dd0e1", c:"#00838f", d:"#e0f7fa", skin:"#f8dcd0", hair:"#006064", mood:"star" },
+        // 蓝 · 扛事组
+        DL: { g:"b", a:"#1e88e5", b:"#42a5f5", c:"#1565c0", d:"#e3f2fd", skin:"#f0d8c0", hair:"#0d47a1", mood:"strong" },
+        HN: { g:"b", a:"#5c7cfa", b:"#748ffc", c:"#3b5bdb", d:"#edf2ff", skin:"#f0dcc8", hair:"#1a237e", mood:"quiet" },
+        JU: { g:"b", a:"#2979ff", b:"#448aff", c:"#2962ff", d:"#e8f1ff", skin:"#f0d8c0", hair:"#0d47a1", mood:"fire" },
+        // 黄 · 自游组
+        MG: { g:"y", a:"#ffca28", b:"#ffd54f", c:"#f9a825", d:"#fff8e1", skin:"#f8e0c0", hair:"#e65100", mood:"lazy" },
+        DZ: { g:"y", a:"#ffb300", b:"#ffca28", c:"#ff8f00", d:"#fffde7", skin:"#f8e4c8", hair:"#ef6c00", mood:"idea" },
+        YX: { g:"y", a:"#d4e157", b:"#dce775", c:"#afb42b", d:"#f9fbe7", skin:"#f0e8d8", hair:"#827717", mood:"hide" }
+      };
+      const s = C[code] || C.MG;
+
+      function face(mood) {
+        // faceted low-poly head (16p style): front plane + side planes
+        let eyes = `<polygon points="88,108 95,104 95,112" fill="#2b2b2b"/><polygon points="105,104 112,108 105,112" fill="#2b2b2b"/>`;
+        let brows = "";
+        let mouth = `<path d="M96 122c3 2 8 2 11 0" stroke="#6d4c41" stroke-width="1.5" fill="none"/>`;
+        if (mood==="lazy") { eyes=`<rect x="87" y="107" width="9" height="2.5" rx="1" fill="#2b2b2b"/><rect x="104" y="107" width="9" height="2.5" rx="1" fill="#2b2b2b"/>`; mouth=`<path d="M97 122h9" stroke="#6d4c41" stroke-width="1.5"/>`; }
+        if (mood==="frown") { brows=`<path d="M86 102l10 4M114 102l-10 4" stroke="#2b2b2b" stroke-width="2"/>`; mouth=`<path d="M96 124c3-2 8-2 11 0" stroke="#6d4c41" stroke-width="1.5" fill="none"/>`; }
+        if (mood==="yum") { eyes=`<path d="M88 108c2-3 6-3 8 0" stroke="#2b2b2b" stroke-width="2" fill="none"/><path d="M104 108c2-3 6-3 8 0" stroke="#2b2b2b" stroke-width="2" fill="none"/>`; mouth=`<ellipse cx="103" cy="123" rx="5" ry="3.5" fill="#5d4037"/>`; }
+        if (mood==="kid") { eyes=`<circle cx="91" cy="108" r="3.4" fill="#2b2b2b"/><circle cx="109" cy="108" r="3.4" fill="#2b2b2b"/><circle cx="92" cy="107" r="1.1" fill="#fff"/><circle cx="110" cy="107" r="1.1" fill="#fff"/>`; mouth=`<path d="M95 121c4 4 10 4 14 0" stroke="#6d4c41" stroke-width="1.5" fill="none"/>`; }
+        if (mood==="star") { eyes=`<circle cx="91" cy="108" r="3" fill="#2b2b2b"/><circle cx="109" cy="108" r="3" fill="#2b2b2b"/>`; mouth=`<path d="M95 120c5 5 12 5 17 0" stroke="#6d4c41" stroke-width="1.7" fill="none"/>`; }
+        if (mood==="quiet") { eyes=`<rect x="88" y="107" width="8" height="2" fill="#2b2b2b"/><rect x="104" y="107" width="8" height="2" fill="#2b2b2b"/>`; mouth=`<path d="M98 122h8" stroke="#6d4c41" stroke-width="1.3"/>`; }
+        if (mood==="hide") { eyes=`<rect x="88" y="107" width="8" height="2" fill="#9e9e9e"/><rect x="104" y="107" width="8" height="2" fill="#9e9e9e"/>`; mouth=`<path d="M98 122h7" stroke="#bdbdbd" stroke-width="1.2"/>`; }
+        if (mood==="fire") { brows=`<path d="M86 101l11 4M114 101l-11 4" stroke="#2b2b2b" stroke-width="2.2"/>`; }
+        if (mood==="idea") { eyes=`<polygon points="88,108 95,104 95,112" fill="#2b2b2b"/><polygon points="105,104 112,108 105,112" fill="#2b2b2b"/>`; }
+        if (mood==="side") { eyes=`<rect x="92" y="107" width="7" height="2.2" fill="#2b2b2b"/><rect x="106" y="107" width="7" height="2.2" fill="#2b2b2b"/>`; }
+        if (mood==="dead") { eyes=`<rect x="87" y="107" width="9" height="2.2" fill="#2b2b2b"/><rect x="104" y="107" width="9" height="2.2" fill="#2b2b2b"/>`; mouth=`<path d="M97 122h9" stroke="#6d4c41" stroke-width="1.4"/>`; }
+        return `
+          <polygon points="100,78 122,92 120,124 100,136 80,124 78,92" fill="${s.skin}"/>
+          <polygon points="100,78 122,92 100,98 78,92" fill="#ffffff" opacity=".22"/>
+          <polygon points="122,92 120,124 112,118 112,98" fill="#000000" opacity=".06"/>
+          <polygon points="78,92 80,124 88,118 88,98" fill="#000000" opacity=".04"/>
+          ${brows}${eyes}
+          <polygon points="100,114 103.5,119 98,119" fill="#d2a88a"/>
+          ${mouth}
+        `;
+      }
+
+      function hair(kind) {
+        const H = {
+          short: `<polygon points="78,96 84,76 100,68 116,76 122,96 112,86 100,82 88,86" fill="${s.hair}"/>
+                  <polygon points="100,68 116,76 112,86 100,80" fill="#000" opacity=".12"/>`,
+          bob: `<polygon points="76,110 80,74 100,64 120,74 124,110 116,90 100,84 84,90" fill="${s.hair}"/>
+                <polygon points="100,64 120,74 116,90 100,82" fill="#000" opacity=".12"/>`,
+          spiky: `<polygon points="80,92 86,70 92,80 100,62 108,78 114,68 120,92 108,84 100,80 90,84" fill="${s.hair}"/>`,
+          long: `<polygon points="74,120 78,74 100,62 122,74 126,120 118,96 100,88 82,96" fill="${s.hair}"/>
+                 <polygon points="74,120 78,140 88,128 82,100" fill="${s.hair}" opacity=".85"/>
+                 <polygon points="126,120 122,140 112,128 118,100" fill="${s.hair}" opacity=".85"/>`,
+          hat: `<polygon points="76,96 82,72 100,64 118,72 124,96" fill="${s.c}"/>
+                <polygon points="86,96 100,64 114,96" fill="${s.a}" opacity=".35"/>
+                <polygon points="74,96 126,96 122,102 78,102" fill="${s.b}"/>`,
+          baldish: `<polygon points="82,92 88,78 100,74 112,78 118,92 108,86 100,84 92,86" fill="${s.hair}" opacity=".9"/>`
+        };
+        return H[kind] || H.short;
+      }
+
+      function torso() {
+        return `
+          <polygon points="82,132 118,132 124,176 100,188 76,176" fill="${s.a}"/>
+          <polygon points="100,132 118,132 124,176 100,188" fill="${s.b}"/>
+          <polygon points="100,132 100,188 76,176" fill="${s.c}" opacity=".25"/>
+          <polygon points="86,136 114,136 110,150 90,150" fill="${s.d}"/>
+          <polygon points="76,176 100,188 90,210 72,204" fill="${s.c}"/>
+          <polygon points="100,188 124,176 128,204 110,210" fill="${s.c}"/>
+          <polygon points="72,204 90,210 88,216 70,212" fill="${s.b}"/>
+          <polygon points="110,210 128,204 130,212 112,216" fill="${s.b}"/>
+        `;
+      }
+
+      function armL() {
+        return `<polygon points="82,138 70,160 76,163 90,144" fill="${s.a}"/><polygon points="70,160 76,163 74,172 68,168" fill="${s.b}"/>`;
+      }
+      function armR() {
+        return `<polygon points="118,138 134,158 128,162 114,144" fill="${s.a}"/><polygon points="134,158 128,162 130,172 136,166" fill="${s.b}"/>`;
+      }
+
+      const props = {
+        MG: `
+          <ellipse cx="150" cy="155" rx="16" ry="7" fill="#90caf9"/>
+          <circle cx="160" cy="153" r="2" fill="#1565c0"/>
+          <path d="M142 155l-7 3.5 7 3.5z" fill="#64b5f6"/>
+          <rect x="88" y="150" width="22" height="12" rx="1" fill="${s.d}" stroke="${s.c}" stroke-width="1"/>
+          <text x="92" y="159" font-size="7" fill="${s.c}" font-family="system-ui">摸鱼中</text>
+        `,
+        TP: `
+          <text x="148" y="100" font-size="15" font-weight="700" fill="${s.a}" font-family="system-ui">z</text>
+          <text x="160" y="88" font-size="11" font-weight="700" fill="${s.b}" font-family="system-ui">z</text>
+          <rect x="88" y="152" width="24" height="14" rx="1" fill="${s.d}" stroke="${s.c}" stroke-width="1"/>
+          <text x="91" y="161" font-size="6.5" fill="${s.c}" font-family="system-ui">已下班</text>
+        `,
+        HM: `
+          <circle cx="154" cy="96" r="11" fill="${s.c}"/>
+          <path d="M148 104l-18 20" stroke="${s.a}" stroke-width="3" stroke-linecap="round"/>
+          <path d="M151 108l-10 14" stroke="${s.b}" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="88,148 112,148 108,160 92,160" fill="${s.d}"/>
+        `,
+        GD: `
+          <ellipse cx="152" cy="150" rx="20" ry="8" fill="${s.c}"/>
+          <path d="M132 150c2 13 11 19 20 19s18-6 20-19" fill="${s.a}"/>
+          <path d="M140 142c2-10 7-16 11-16" stroke="${s.b}" stroke-width="2" fill="none"/>
+          <path d="M148 138c1-6 3-9 5-9" stroke="${s.b}" stroke-width="1.5" fill="none"/>
+          <polygon points="90,152 110,152 108,164 92,164" fill="${s.d}"/>
+        `,
+        XH: `
+          <rect x="140" y="132" width="26" height="24" rx="4" fill="${s.a}"/>
+          <circle cx="148" cy="141" r="2" fill="${s.c}"/><circle cx="158" cy="141" r="2" fill="${s.c}"/>
+          <path d="M146 149h14" stroke="${s.c}" stroke-width="1.4"/>
+          <polygon points="90,70 96,58 100,66 104,56 110,68" fill="${s.b}"/>
+          <circle cx="100" cy="54" r="5" fill="${s.a}"/><circle cx="100" cy="54" r="2" fill="${s.d}"/>
+        `,
+        DL: `
+          <rect x="148" y="108" width="12" height="48" rx="1" fill="${s.a}"/>
+          <rect x="143" y="106" width="22" height="5" rx="1" fill="${s.c}"/>
+          <rect x="143" y="152" width="22" height="5" rx="1" fill="${s.c}"/>
+          <rect x="150" y="120" width="8" height="8" fill="${s.d}"/>
+          <polygon points="88,142 112,142 108,156 92,156" fill="${s.d}"/>
+        `,
+        JU: `
+          <polygon points="162,92 150,120 158,118 148,148 172,112 162,114 174,92" fill="#ffab00"/>
+          <polygon points="162,92 158,108 166,104" fill="#ffe082"/>
+          <polygon points="88,146 112,146 108,158 92,158" fill="${s.d}"/>
+          <polygon points="80,128 90,118 92,130" fill="${s.b}"/>
+        `,
+        RH: `
+          <rect x="142" y="134" width="30" height="22" rx="2" fill="${s.c}"/>
+          <path d="M151 134v-4a6 6 0 0 1 12 0v4" stroke="${s.b}" stroke-width="2.5" fill="none"/>
+          <rect x="149" y="141" width="16" height="7" rx="1" fill="${s.d}"/>
+          <polygon points="88,150 112,150 108,162 92,162" fill="${s.d}"/>
+        `,
+        XJ: `
+          <polygon points="160,82 174,122 146,122" fill="${s.b}" opacity=".92"/>
+          <circle cx="160" cy="82" r="6" fill="${s.c}"/>
+          <polygon points="100,66 103.5,74 112,74 105.5,80 108,88 100,83 92,88 94.5,80 88,74 96.5,74" fill="#ffd54f"/>
+          <polygon points="86,144 114,144 110,156 90,156" fill="${s.d}"/>
+        `,
+        HN: `
+          <rect x="152" y="104" width="5" height="46" rx="1" fill="${s.c}"/>
+          <polygon points="140,150 170,150 164,168 146,168" fill="#37474f"/>
+          <polygon points="146,168 164,168 160,172 150,172" fill="#263238"/>
+          <polygon points="88,150 112,150 108,162 92,162" fill="${s.d}"/>
+        `,
+        DZ: `
+          <circle cx="154" cy="124" r="15" fill="#ffee58"/>
+          <polygon points="148,138 160,138 158,146 150,146" fill="${s.c}"/>
+          <path d="M154 104v-10M136 124h-8M180 124h8M140 110l-6-6M168 110l6-6" stroke="${s.a}" stroke-width="2.5" stroke-linecap="round"/>
+          <polygon points="88,148 112,148 108,160 92,160" fill="${s.d}"/>
+        `,
+        YX: `
+          <path d="M138 118v-6c0-14 7-26 17-26s17 12 17 26v26l-6-4-5 4-6-4-5 4-6-4-6 4z" fill="${s.d}" stroke="${s.c}" stroke-width="1.3" stroke-dasharray="3 2"/>
+          <circle cx="148" cy="118" r="1.6" fill="#9e9e9e"/><circle cx="162" cy="118" r="1.6" fill="#9e9e9e"/>
+          <polygon points="88,150 112,150 108,162 92,162" fill="${s.d}" opacity=".65"/>
+        `
+      };
+
+      const hairMap = { MG:"short", TP:"dead", HM:"spiky", GD:"short", XH:"bob", DL:"hat", JU:"spiky", RH:"short", XJ:"long", HN:"baldish", DZ:"short", YX:"bob" };
+      const moodMap = { MG:"lazy", TP:"dead", HM:"frown", GD:"yum", XH:"kid", DL:"strong", JU:"fire", RH:"side", XJ:"star", HN:"quiet", DZ:"idea", YX:"hide" };
+
+      // slight unique stance per group
+      const stance = {
+        p: "rotate(-2 100 150)",
+        g: "",
+        b: "",
+        y: "rotate(2 100 150)"
+      };
+
+      return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${code}">
+        <circle cx="100" cy="112" r="100" fill="${s.d}"/>
+        <ellipse cx="100" cy="212" rx="40" ry="6" fill="#000" opacity=".05"/>
+        <g transform="${stance[s.g] || ""}">
+          ${armL()}
+          ${torso()}
+          ${armR()}
+          ${hair(hairMap[code])}
+          ${face(moodMap[code])}
+          ${props[code] || ""}
+        </g>
+      </svg>`;
+    }
+
+
+
+    function computeResult() {
+      const score = Object.fromEntries(TYPE_ORDER.map((t) => [t, 0]));
+      const emotion = Object.fromEntries(TYPE_ORDER.map((t) => [t, 0]));
+      const first = Object.fromEntries(TYPE_ORDER.map((t) => [t, 999]));
+
+      state.answers.forEach((type, qi) => {
+        if (!type) return;
+        score[type] += 1;
+        if (EMOTION_Q.has(qi + 1)) emotion[type] += 1;
+        if (first[type] === 999) first[type] = qi;
+      });
+
+      const max = Math.max(...Object.values(score));
+      let candidates = TYPE_ORDER.filter((t) => score[t] === max);
+
+      if (candidates.length > 1) {
+        const emMax = Math.max(...candidates.map((t) => emotion[t]));
+        candidates = candidates.filter((t) => emotion[t] === emMax);
+      }
+      if (candidates.length > 1) {
+        const fiMin = Math.min(...candidates.map((t) => first[t]));
+        candidates = candidates.filter((t) => first[t] === fiMin);
+      }
+      if (candidates.length > 1) {
+        candidates = [candidates.sort((a, b) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b))[0]];
+      }
+      return { winner: candidates[0], score };
+    }
+
+    function showResult() {
+      const { winner } = computeResult();
+      const p = TYPES[winner];
+      $("rCode").textContent = winner;
+      $("rChar").innerHTML = "";
+      const img = document.createElement("img");
+      img.src = "assets/characters-web/" + winner + ".png";
+      img.alt = TYPES[winner].name;
+      img.width = 480;
+      img.height = 640;
+      $("rChar").appendChild(img);
+      $("rName").textContent = p.name;
+      $("rTitle").textContent = p.title;
+      $("rQuote").textContent = p.quote;
+      $("rProfile").textContent = p.profile;
+      $("rSkill").textContent = p.skill;
+      $("rRisk").textContent = p.risk;
+      $("rSummary").textContent = p.summary;
+      const tags = $("rTags");
+      tags.innerHTML = "";
+      p.tags.forEach((t) => {
+        const s = document.createElement("span");
+        s.className = "tag";
+        s.textContent = t;
+        tags.appendChild(s);
+      });
+      show("result");
+    }
+
+    $("btnStart").addEventListener("click", () => {
+      state.idx = 0;
+      state.answers.fill(null);
+      renderQuestion();
+      show("quiz");
+    });
+
+    $("btnPrev").addEventListener("click", () => {
+      if (state.idx > 0) {
+        state.idx -= 1;
+        renderQuestion();
+      }
+    });
+
+    $("btnAgain").addEventListener("click", () => {
+      state.idx = 0;
+      state.answers.fill(null);
+      show("intro");
+    });
+
+    function shareText() {
+      const code = $("rCode").textContent;
+      const p = TYPES[code];
+      return `我是打工人成分检测的【${code}·${p.name}】——${p.title}\n${p.quote}\n${p.summary}\n来测测你的上班成分？`;
+    }
+
+    $("btnShare").addEventListener("click", async () => {
+      const btn = $("btnShare");
+      const text = shareText();
+      const payload = { title: "打工人成分检测", text, url: location.href };
+      try {
+        if (navigator.share) {
+          await navigator.share(payload);
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      try {
+        await navigator.clipboard.writeText(`${text}\n${location.href}`);
+        btn.textContent = "已复制，去粘贴";
+        setTimeout(() => { btn.textContent = "分享结果"; }, 1800);
+      } catch {
+        btn.textContent = "复制失败";
+        setTimeout(() => { btn.textContent = "分享结果"; }, 1800);
+      }
+    });
+  </script>
+</body>
+</html>
